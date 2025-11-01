@@ -1,0 +1,16 @@
+# Kindle2PDF - 必要なPythonパッケージ
+# 
+# インストール方法:
+#   pip install -r requirements.txt
+
+# スクリーンショット自動化
+pyautogui>=0.9.54
+
+# 画像処理
+pillow>=10.0.0
+
+# 重複画像検出（SSIM計算）
+scikit-image>=0.20.0
+
+# 数値計算（scikit-imageの依存関係として自動インストールされるが明示）
+numpy>=1.24.0
