@@ -212,6 +212,32 @@ macOSでは以下の権限設定が必要です：
 5. **連続エラー**: 3回連続でエラーが発生すると自動停止します
 6. **無限ループ防止**: 2000ページを超えると強制終了します
 
+### パス指定時の注意（重要）
+
+⚠️ **チルダ（~）の使用について**
+
+コマンドライン引数でパスを指定する際は、以下の点にご注意ください：
+
+```bash
+# ❌ 間違った例（チルダが正しく展開されない場合があります）
+python png_to_pdf.py --input ~/Documents/BookTitle --output ~/Documents/BookTitle.pdf
+
+# ✅ 正しい例（絶対パスを使用）
+python png_to_pdf.py --input /Users/username/Documents/BookTitle --output /Users/username/Documents/BookTitle.pdf
+
+# ✅ または相対パスを使用
+python png_to_pdf.py --input ../Documents/BookTitle --output ../Documents/BookTitle.pdf
+```
+
+**問題の詳細:**
+- チルダ（`~`）がPythonスクリプト内で正しく展開されない場合、ファイルが予期しない場所に保存される可能性があります
+- 例：`~/Documents/file.pdf` → `./~/Documents/file.pdf`（現在のディレクトリ下に`~`フォルダが作成される）
+
+**推奨される対処法:**
+1. **絶対パス**を使用する（最も確実）
+2. **相対パス**を使用する
+3. 設定ファイル（`config.json`）で事前にパスを設定する
+
 ### ファイル形式とサイズ
 
 - スクリーンショット: PNG形式
