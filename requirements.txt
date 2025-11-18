@@ -14,3 +14,8 @@ scikit-image>=0.20.0
 
 # 数値計算（scikit-imageの依存関係として自動インストールされるが明示）
 numpy>=1.24.0
+
+# テストフレームワーク
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0

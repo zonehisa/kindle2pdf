@@ -12,16 +12,9 @@ import os
 import sys
 import argparse
 import glob
-import re
 from PIL import Image
 
-
-def natural_sort_key(text):
-    """
-    自然順序でソートするためのキー関数
-    例: image_1.png, image_2.png, image_10.png の順序を正しく保つ
-    """
-    return [int(c) if c.isdigit() else c.lower() for c in re.split('([0-9]+)', text)]
+from utils.image_utils import natural_sort_key, convert_rgba_to_rgb
 
 
 def find_png_files(input_folder, pattern="*.png"):
@@ -75,16 +68,7 @@ def convert_png_to_jpg(png_file, output_folder=None, quality=95, delete_original
         img = Image.open(png_file)
         
         # RGBAモードの場合はRGBに変換（JPGはアルファチャンネルをサポートしない）
-        if img.mode in ('RGBA', 'LA'):
-            # 白い背景を作成
-            background = Image.new('RGB', img.size, (255, 255, 255))
-            if img.mode == 'RGBA':
-                background.paste(img, mask=img.split()[-1])  # アルファチャンネルをマスクとして使用
-            else:
-                background.paste(img, mask=img.split()[-1])
-            img = background
-        elif img.mode != 'RGB':
-            img = img.convert('RGB')
+        img = convert_rgba_to_rgb(img)
         
         # 出力ファイルパスを決定
         if output_folder:

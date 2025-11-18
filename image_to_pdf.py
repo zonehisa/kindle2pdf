@@ -14,16 +14,11 @@ import os
 import sys
 import argparse
 import glob
-import re
 from PIL import Image
 import json
 
-def natural_sort_key(text):
-    """
-    自然順序でソートするためのキー関数
-    例: page_1.png, page_2.png, page_10.png の順序を正しく保つ
-    """
-    return [int(c) if c.isdigit() else c.lower() for c in re.split('([0-9]+)', text)]
+from utils.image_utils import natural_sort_key, convert_rgba_to_rgb
+from utils.config_utils import load_config
 
 def find_image_files(input_folder, pattern=None):
     """
@@ -101,16 +96,7 @@ def convert_images_to_pdf(image_files, output_pdf, quality=95, optimize=True, pa
             img = Image.open(image_file)
             
             # RGBAモードの場合はRGBに変換（PDFはアルファチャンネルをサポートしない）
-            if img.mode in ('RGBA', 'LA'):
-                # 白い背景を作成
-                background = Image.new('RGB', img.size, (255, 255, 255))
-                if img.mode == 'RGBA':
-                    background.paste(img, mask=img.split()[-1])  # アルファチャンネルをマスクとして使用
-                else:
-                    background.paste(img, mask=img.split()[-1])
-                img = background
-            elif img.mode != 'RGB':
-                img = img.convert('RGB')
+            img = convert_rgba_to_rgb(img)
             
             images.append(img)
             
@@ -221,7 +207,7 @@ def convert_images_to_pdf(image_files, output_pdf, quality=95, optimize=True, pa
 
 def load_config_for_pdf(config_file="config.json"):
     """
-    設定ファイルからPDF変換用の設定を読み込む
+    設定ファイルからPDF変換用の設定を読み込む（後方互換性のため）
     
     Args:
         config_file (str): 設定ファイルのパス
@@ -229,23 +215,7 @@ def load_config_for_pdf(config_file="config.json"):
     Returns:
         dict: 設定辞書
     """
-    default_config = {
-        "output_folder": "/Users/fatowl/Desktop/KindleScreenshots",
-        "book_title": "MyKindleBook",
-        "pdf_output_folder": None,  # None の場合は入力フォルダと同じ場所
-        "pdf_filename": None        # None の場合は book_title.pdf を使用
-    }
-    
-    if os.path.exists(config_file):
-        try:
-            with open(config_file, 'r', encoding='utf-8') as f:
-                user_config = json.load(f)
-                default_config.update(user_config)
-                print(f"設定ファイル '{config_file}' を読み込みました")
-        except Exception as e:
-            print(f"設定ファイルの読み込みに失敗: {e}")
-    
-    return default_config
+    return load_config(config_file)
 
 def parse_arguments():
     """

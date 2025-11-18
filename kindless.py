@@ -3,11 +3,10 @@ import pyautogui
 import os
 import sys
 import argparse
-import json
 import platform
-from PIL import Image
-import numpy as np
-from skimage.metrics import structural_similarity as ssim
+
+from utils.config_utils import load_config
+from utils.image_utils import load_and_resize_image, calculate_similarity
 
 # OS自動判定
 CURRENT_OS = platform.system().lower()
@@ -72,76 +71,6 @@ def check_permissions():
         
         return False
 
-def load_config(config_file=None):
-    """
-    設定ファイルを読み込む関数
-    Args:
-        config_file (str, optional): 設定ファイルのパス
-    Returns:
-        dict: 設定辞書
-    """
-    default_config = {
-        "output_folder": os.path.join(os.path.expanduser("~"), "Documents"),
-        "book_title": "KindleBook",
-        "page_delay": 2,
-        "num_pages": 100,
-        "similarity_threshold": 0.99
-    }
-    
-    if config_file and os.path.exists(config_file):
-        try:
-            with open(config_file, 'r', encoding='utf-8') as f:
-                user_config = json.load(f)
-                print(f"設定ファイル '{config_file}' を読み込みました。")
-                print(f"読み込んだ設定: {user_config}")
-                # デフォルト設定にユーザー設定をマージ
-                default_config.update(user_config)
-                print(f"マージ後の設定: {default_config}")
-        except (json.JSONDecodeError, IOError) as e:
-            print(f"設定ファイルの読み込みに失敗しました: {e}")
-            print("デフォルト設定を使用します。")
-    elif config_file:
-        print(f"設定ファイルが見つかりません: {config_file}")
-        print("デフォルト設定を使用します。")
-    else:
-        print("設定ファイルが指定されていません。デフォルト設定を使用します。")
-    
-    return default_config
-
-def load_and_resize_image(image_path, target_size=(256, 256)):
-    """
-    画像を読み込み、比較用にリサイズ・グレースケール変換
-    
-    Args:
-        image_path: 画像ファイルのパス
-        target_size: リサイズ後のサイズ
-        
-    Returns:
-        グレースケール画像の配列、失敗時はNone
-    """
-    try:
-        with Image.open(image_path) as img:
-            # RGBAの場合はRGBに変換
-            if img.mode == 'RGBA':
-                # 白背景で合成
-                background = Image.new('RGB', img.size, (255, 255, 255))
-                background.paste(img, mask=img.split()[-1])
-                img = background
-            elif img.mode != 'RGB':
-                img = img.convert('RGB')
-            
-            # リサイズ
-            img = img.resize(target_size, Image.Resampling.LANCZOS)
-            
-            # グレースケールに変換
-            img_gray = img.convert('L')
-            
-            # numpy配列に変換
-            return np.array(img_gray)
-            
-    except Exception as e:
-        print(f"画像の読み込みに失敗しました: {image_path} - {e}")
-        return None
 
 def compare_images(image_path1, image_path2, similarity_threshold=0.99):
     """
@@ -166,7 +95,7 @@ def compare_images(image_path1, image_path2, similarity_threshold=0.99):
             return False
         
         # SSIMを計算
-        similarity = ssim(img1, img2, data_range=255)
+        similarity = calculate_similarity(img1, img2)
         
         return similarity >= similarity_threshold
     except Exception as e:

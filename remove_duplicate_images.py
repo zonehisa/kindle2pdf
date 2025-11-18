@@ -9,13 +9,13 @@ import os
 import sys
 import shutil
 from pathlib import Path
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 import argparse
 from datetime import datetime
 
 import numpy as np
-from PIL import Image
-from skimage.metrics import structural_similarity as ssim
+
+from utils.image_utils import load_and_resize_image, calculate_similarity
 
 
 class DuplicateImageRemover:
@@ -50,59 +50,6 @@ class DuplicateImageRemover:
         png_files.extend(self.directory.glob("*.PNG"))
         return sorted(png_files)
     
-    def load_and_resize_image(self, image_path: Path, target_size: Tuple[int, int] = (256, 256)) -> np.ndarray:
-        """
-        画像を読み込み、比較用にリサイズ・グレースケール変換
-        
-        Args:
-            image_path: 画像ファイルのパス
-            target_size: リサイズ後のサイズ
-            
-        Returns:
-            グレースケール画像の配列
-        """
-        try:
-            with Image.open(image_path) as img:
-                # RGBAの場合はRGBに変換
-                if img.mode == 'RGBA':
-                    # 白背景で合成
-                    background = Image.new('RGB', img.size, (255, 255, 255))
-                    background.paste(img, mask=img.split()[-1])
-                    img = background
-                elif img.mode != 'RGB':
-                    img = img.convert('RGB')
-                
-                # リサイズ
-                img = img.resize(target_size, Image.Resampling.LANCZOS)
-                
-                # グレースケールに変換
-                img_gray = img.convert('L')
-                
-                # numpy配列に変換
-                return np.array(img_gray)
-                
-        except Exception as e:
-            print(f"画像の読み込みに失敗しました: {image_path} - {e}")
-            return None
-    
-    def calculate_similarity(self, img1: np.ndarray, img2: np.ndarray) -> float:
-        """
-        2つの画像の類似度をSSIMで計算
-        
-        Args:
-            img1: 画像1の配列
-            img2: 画像2の配列
-            
-        Returns:
-            類似度（0.0-1.0）
-        """
-        try:
-            # SSIMを計算
-            similarity = ssim(img1, img2, data_range=255)
-            return similarity
-        except Exception as e:
-            print(f"類似度計算に失敗しました: {e}")
-            return 0.0
     
     def find_duplicates(self) -> Dict[str, List[Path]]:
         """
@@ -122,7 +69,7 @@ class DuplicateImageRemover:
         # 画像を読み込み
         images = {}
         for file_path in png_files:
-            img_array = self.load_and_resize_image(file_path)
+            img_array = load_and_resize_image(file_path)
             if img_array is not None:
                 images[file_path] = img_array
             else:
@@ -150,7 +97,7 @@ class DuplicateImageRemover:
                 if file2 in processed:
                     continue
                 
-                similarity = self.calculate_similarity(images[file1], images[file2])
+                similarity = calculate_similarity(images[file1], images[file2])
                 
                 if similarity >= self.similarity_threshold:
                     duplicates.append(file2)

@@ -434,6 +434,55 @@ python3.12 -m venv venv
 - ファイルサイズ
 - OS情報
 
+## テスト
+
+このプロジェクトには包括的なテストスイートが含まれています。
+
+### テストの実行
+
+```bash
+# 仮想環境をアクティベート
+source .venv/bin/activate
+
+# すべてのテストを実行
+pytest tests/ -v
+
+# カバレッジ付きで実行
+pytest tests/ --cov=utils --cov=remove_duplicate_images --cov=png_to_jpg --cov=image_to_pdf --cov=kindle2pdf --cov-report=html
+
+# 特定のテストファイルのみ実行
+pytest tests/test_remove_duplicate_images.py -v
+
+# 特定のテストクラスのみ実行
+pytest tests/test_image_utils.py::TestNaturalSortKey -v
+```
+
+### テストカバレッジ
+
+現在のテストカバレッジは約68%です：
+
+- `utils/config_utils.py`: 100%
+- `utils/image_utils.py`: 97%
+- `kindle2pdf.py`: 74%
+- `remove_duplicate_images.py`: 69%
+- `png_to_jpg.py`: 65%
+- `image_to_pdf.py`: 53%
+
+カバレッジレポートは`htmlcov/index.html`で確認できます。
+
+### テスト構成
+
+テストは以下のファイルで構成されています：
+
+- `tests/test_image_utils.py` - 画像処理ユーティリティのテスト（17テスト）
+- `tests/test_config_utils.py` - 設定ファイル読み込みユーティリティのテスト（10テスト）
+- `tests/test_remove_duplicate_images.py` - 重複画像削除スクリプトのテスト（18テスト）
+- `tests/test_png_to_jpg.py` - PNG→JPG変換スクリプトのテスト（17テスト）
+- `tests/test_image_to_pdf.py` - 画像→PDF変換スクリプトのテスト（17テスト）
+- `tests/test_kindle2pdf.py` - パイプライン統合テスト（12テスト）
+
+**合計: 91テスト（すべて通過）**
+
 ## ライセンス
 
 このプロジェクトは個人利用を目的としています。商用利用や著作権で保護されたコンテンツの無断複製は禁止されています。
